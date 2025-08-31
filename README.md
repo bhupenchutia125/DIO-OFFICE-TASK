@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DISTRICT IMMUNIZATION OFFICE Dibrugarh - Task Management System</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .navbar-brand img {
+            height: 50px;
+            margin-right: 10px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 5px solid var(--accent-color);
+        }
+        
+        .task-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+        
+        .task-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        
+        .overdue {
+            border-left: 5px solid var(--accent-color);
+        }
+        
+        .completed {
+            border-left: 5px solid var(--success-color);
+        }
+        
+        .pending {
+            border-left: 5px solid var(--warning-color);
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 30px auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            background-color: white;
+        }
+        
+        .footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-top: auto;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        
+        .task-actions {
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        
+        .task-card:hover .task-actions {
+            opacity: 1;
+        }
+        
+        .welcome-container {
+            background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stats-card i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .stats-card.pending {
+            background-color: rgba(243, 156, 18, 0.2);
+            color: var(--warning-color);
+        }
+        
+        .stats-card.completed {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: var(--success-color);
+        }
+        
+        .stats-card.overdue {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: var(--accent-color);
+        }
+        
+        /* Toast notification */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+        
+        /* Animation for task cards */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .task-card {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .header h2 {
+                font-size: 1.2rem;
+            }
+            
+            .login-container {
+                margin: 15px auto;
+                padding: 20px;
+            }
+            
+            .stats-card {
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notification Container -->
+    <div class="toast-container"></div>
+
+    <!-- Header Section -->
+    <div class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-2">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iODAiIGhlaWdodD0iODAiIGZpbGw9IiMzNDk4ZGIiIHJ4PSIxMCIvPjxjaXJjbGUgY3g9IjM1IiBjeT0iNDAiIHI9IjE1IiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjY1IiBjeT0iNDAiIHI9IjE1IiBmaWxsPSJ3aGl0ZSIvPjxwYXRoIGQ9Ik0zNSA3MGMwIDAgMTAtNSA0MCAwIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjQiIGZpbGw9Im5vbmUiLz48L3N2Zz4=" alt="Logo" class="img-fluid">
+                </div>
+                <div class="col-md-10">
+                    <h1>DISTRICT IMMUNIZATION OFFICE</h1>
+                    <h2>Dibrugarh, Assam</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mb-5">
+        <!-- Authentication Section (Initially Visible) -->
+        <div id="auth-section">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="login-container">
+                        <h3 class="text-center mb-4"><i class="fas fa-sign-in-alt me-2"></i>Login</h3>
+                        <form id="login-form">
+                            <div class="mb-3">
+                                <label for="login-email" class="form-label">Email address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" class="form-control" id="login-email" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="login-password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="login-password" required>
+                                </div>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="remember-me">
+                                <label class="form-check-label" for="remember-me">Remember me</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-sign-in-alt me-2"></i>Login</button>
+                            <div class="text-center mt-3">
+                                <a href="#" id="forgot-password-link">Forgot Password?</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="login-container">
+                        <h3 class="text-center mb-4"><i class="fas fa-user-plus me-2"></i>Register</h3>
+                        <form id="register-form">
+                            <div class="mb-3">
+                                <label for="register-name" class="form-label">Full Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" class="form-control" id="register-name" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-email" class="form-label">Email address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" class="form-control" id="register-email" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-phone" class="form-label">Phone Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                    <input type="tel" class="form-control" id="register-phone">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="register-password" required>
+                                    <span class="input-group-text"><i class="fas fa-question-circle" title="Password must be at least 8 characters with uppercase, lowercase, and number"></i></span>
+                                </div>
+                                <div class="form-text">Must be at least 8 characters with uppercase, lowercase, and number</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-confirm-password" class="form-label">Confirm Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="register-confirm-password" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-user-plus me-2"></i>Register</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forgot Password Modal -->
+        <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Reset Password</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Enter your email address and we'll send you a link to reset your password.</p>
+                        <form id="forgot-password-form">
+                            <div class="mb-3">
+                                <label for="reset-email" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="reset-email" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Send Reset Link</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Management Section (Initially Hidden) -->
+        <div id="task-section" style="display: none;">
+            <!-- Welcome and Stats Section -->
+            <div class="welcome-container">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h3>Welcome back, <span id="user-name"></span>!</h3>
+                        <p class="mb-0">Here's an overview of your immunization tasks</p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <button id="logout-btn" class="btn btn-light">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="stats-card pending">
+                        <i class="fas fa-clock"></i>
+                        <h4 id="pending-count">0</h4>
+                        <p>Pending Tasks</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card completed">
+                        <i class="fas fa-check-circle"></i>
+                        <h4 id="completed-count">0</h4>
+                        <p>Completed Tasks</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card overdue">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h4 id="overdue-count">0</h4>
+                        <p>Overdue Tasks</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-tasks me-2"></i>Immunization Task Manager</h2>
+                <div class="position-relative">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                        <i class="fas fa-plus"></i> Add New Task
+                    </button>
+                    <span class="notification-badge" id="notification-count">0</span>
+                </div>
+            </div>
+
+            <!-- Task Filters -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="status-filter" class="form-label">Status</label>
+                            <select class="form-select" id="status-filter">
+                                <option value="all">All Tasks</option>
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                                <option value="overdue">Overdue</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date-filter" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="date-filter">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" placeholder="Search tasks...">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="btn-group w-100">
+                                <button class="btn btn-outline-secondary" id="export-btn">
+                                    <i class="fas fa-download"></i> Export
+                                </button>
+                                <button class="btn btn-outline-secondary" id="clear-filters-btn">
+                                    <i class="fas fa-times"></i> Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tasks List -->
+            <div id="tasks-container">
+                <!-- Tasks will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div class="modal fade" id="addTaskModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Immunization Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-task-form">
+                        <div class="mb-3">
+                            <label for="task-title" class="form-label">Task Title</label>
+                            <input type="text" class="form-control" id="task-title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="task-description" class="form-label">Description</label>
+                            <textarea class="form-control" id="task-description" rows="3"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="task-date" class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="task-date" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="task-time" class="form-label">Time</label>
+                                    <input type="time" class="form-control" id="task-time" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="task-location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="task-location">
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="whatsapp-notification">
+                            <label class="form-check-label" for="whatsapp-notification">Send WhatsApp notification</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Add Task</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div class="modal fade" id="editTaskModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Immunization Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-task-form">
+                        <input type="hidden" id="edit-task-id">
+                        <div class="mb-3">
+                            <label for="edit-task-title" class="form-label">Task Title</label>
+                            <input type="text" class="form-control" id="edit-task-title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-task-description" class="form-label">Description</label>
+                            <textarea class="form-control" id="edit-task-description" rows="3"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit-task-date" class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="edit-task-date" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit-task-time" class="form-label">Time</label>
+                                    <input type="time" class="form-control" id="edit-task-time" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-task-location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="edit-task-location">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="edit-task-status">
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="edit-whatsapp-notification">
+                            <label class="form-check-label" for="edit-whatsapp-notification">Send WhatsApp notification</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Update Task</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>DISTRICT IMMUNIZATION OFFICE</h5>
+                    <p>Dibrugarh, Assam</p>
+                    <p>Email: dio.dibrugarh1@gmail.com</p>
+                    <p>Phone: 0373-2950259</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>© 2023 DISTRICT IMMUNIZATION OFFICE Dibrugarh. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap & jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        // Initialize tasks array (in a real app, this would be stored on a server)
+        let tasks = JSON.parse(localStorage.getItem('immunization_tasks')) || [];
+        let currentUser = null;
+        let users = JSON.parse(localStorage.getItem('immunization_users')) || [];
+
+        // Add default admin user if no users exist
+        if (users.length === 0) {
+            users.push({
+                name: 'Admin User',
+                email: 'admin@example.com',
+                phone: '1234567890',
+                password: 'Admin123',
+                isAdmin: true
+            });
+            localStorage.setItem('immunization_users', JSON.stringify(users));
+        }
+
+        // DOM Ready
+        $(document).ready(function() {
+            // Set default date to today for task forms
+            const today = new Date().toISOString().split('T')[0];
+            $('#task-date').val(today);
+            $('#edit-task-date').val(today);
+            
+            // Check if user is logged in
+            const savedUser = localStorage.getItem('current_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showTaskSection();
+            }
+
+            // Event Listeners
+            $('#login-form').on('submit', handleLogin);
+            $('#register-form').on('submit', handleRegister);
+            $('#forgot-password-link').on('click', function(e) {
+                e.preventDefault();
+                $('#forgotPasswordModal').modal('show');
+            });
+            $('#forgot-password-form').on('submit', handlePasswordReset);
+            $('#logout-btn').on('click', handleLogout);
+            $('#add-task-form').on('submit', handleAddTask);
+            $('#edit-task-form').on('submit', handleEditTask);
+            $('#status-filter, #date-filter, #search').on('change keyup', filterTasks);
+            $('#export-btn').on('click', exportData);
+            $('#clear-filters-btn').on('click', clearFilters);
+
+            // Initial render
+            renderTasks();
+            checkOverdueTasks();
+        });
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = $(`
+                <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `);
+            
+            $('.toast-container').append(toast);
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            
+            // Remove toast after it's hidden
+            toast.on('hidden.bs.toast', function() {
+                toast.remove();
+            });
+        }
+
+        // Authentication Functions
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = $('#login-email').val();
+            const password = $('#login-password').val();
+            
+            const user = users.find(u => u.email === email && u.password === password);
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('current_user', JSON.stringify(user));
+                showTaskSection();
+                $('#login-form')[0].reset();
+                showToast('Login successful!', 'success');
+            } else {
+                showToast('Invalid email or password', 'danger');
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = $('#register-name').val();
+            const email = $('#register-email').val();
+            const phone = $('#register-phone').val();
+            const password = $('#register-password').val();
+            const confirmPassword = $('#register-confirm-password').val();
+            
+            // Validate password strength
+            if (!validatePassword(password)) {
+                showToast('Password must be at least 8 characters with uppercase, lowercase, and number', 'warning');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match', 'warning');
+                return;
+            }
+            
+            if (users.some(u => u.email === email)) {
+                showToast('User with this email already exists', 'warning');
+                return;
+            }
+            
+            const newUser = { name, email, phone, password };
+            users.push(newUser);
+            localStorage.setItem('immunization_users', JSON.stringify(users));
+            
+            showToast('Registration successful! Please login.', 'success');
+            $('#register-form')[0].reset();
+        }
+
+        function validatePassword(password) {
+            // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
+            const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+            return regex.test(password);
+        }
+
+        function handlePasswordReset(e) {
+            e.preventDefault();
+            const email = $('#reset-email').val();
+            
+            if (users.some(u => u.email === email)) {
+                showToast('Password reset instructions have been sent to your email.', 'info');
+                $('#forgotPasswordModal').modal('hide');
+                $('#forgot-password-form')[0].reset();
+            } else {
+                showToast('No account found with this email address', 'warning');
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('current_user');
+            $('#auth-section').show();
+            $('#task-section').hide();
+            showToast('You have been logged out', 'info');
+        }
+
+        function showTaskSection() {
+            $('#auth-section').hide();
+            $('#task-section').show();
+            $('#user-name').text(currentUser.name);
+            renderTasks();
+            updateStats();
+        }
+
+        // Task Functions
+        function handleAddTask(e) {
+            e.preventDefault();
+            const title = $('#task-title').val();
+            const description = $('#task-description').val();
+            const date = $('#task-date').val();
+            const time = $('#task-time').val();
+            const location = $('#task-location').val();
+            const whatsapp = $('#whatsapp-notification').is(':checked');
+            
+            const newTask = {
+                id: Date.now(),
+                title,
+                description,
+                date,
+                time,
+                location,
+                createdBy: currentUser.email,
+                status: 'pending',
+                createdAt: new Date().toISOString(),
+                completed: false,
+                whatsappNotification: whatsapp
+            };
+            
+            tasks.push(newTask);
+            localStorage.setItem('immunization_tasks', JSON.stringify(tasks));
+            
+            $('#addTaskModal').modal('hide');
+            $('#add-task-form')[0].reset();
+            
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            $('#task-date').val(today);
+            
+            renderTasks();
+            checkOverdueTasks();
+            updateStats();
+            
+            if (whatsapp) {
+                showToast('WhatsApp notification would be sent for this task in a real implementation', 'info');
+            }
+            
+            showToast('Task added successfully!', 'success');
+        }
+
+        function handleEditTask(e) {
+            e.preventDefault();
+            const taskId = $('#edit-task-id').val();
+            const title = $('#edit-task-title').val();
+            const description = $('#edit-task-description').val();
+            const date = $('#edit-task-date').val();
+            const time = $('#edit-task-time').val();
+            const location = $('#edit-task-location').val();
+            const status = $('#edit-task-status').val();
+            const whatsapp = $('#edit-whatsapp-notification').is(':checked');
+            
+            const taskIndex = tasks.findIndex(t => t.id == taskId);
+            if (taskIndex !== -1) {
+                tasks[taskIndex] = {
+                    ...tasks[taskIndex],
+                    title,
+                    description,
+                    date,
+                    time,
+                    location,
+                    status,
+                    completed: status === 'completed',
+                    whatsappNotification: whatsapp
+                };
+                
+                localStorage.setItem('immunization_tasks', JSON.stringify(tasks));
+                
+                $('#editTaskModal').modal('hide');
+                renderTasks();
+                checkOverdueTasks();
+                updateStats();
+                
+                showToast('Task updated successfully!', 'success');
+            }
+        }
+
+        function openEditTaskModal(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                $('#edit-task-id').val(task.id);
+                $('#edit-task-title').val(task.title);
+                $('#edit-task-description').val(task.description);
+                $('#edit-task-date').val(task.date);
+                $('#edit-task-time').val(task.time);
+                $('#edit-task-location').val(task.location || '');
+                $('#edit-task-status').val(task.status);
+                $('#edit-whatsapp-notification').prop('checked', task.whatsappNotification || false);
+                
+                $('#editTaskModal').modal('show');
+            }
+        }
+
+        function renderTasks() {
+            const container = $('#tasks-container');
+            container.empty();
+            
+            if (tasks.length === 0) {
+                container.html('<div class="alert alert-info">No tasks found. Add a new task to get started.</div>');
+                return;
+            }
+            
+            // Filter tasks based on current user (in a real app, server would handle this)
+            let userTasks = tasks;
+            if (!currentUser.isAdmin) {
+                userTasks = tasks.filter(task => task.createdBy === currentUser.email);
+            }
+            
+            if (userTasks.length === 0) {
+                container.html('<div class="alert alert-info">No tasks found. Add a new task to get started.</div>');
+                return;
+            }
+            
+            userTasks.forEach(task => {
+                const taskDate = new Date(`${task.date}T${task.time}`);
+                const now = new Date();
+                let status = task.status;
+                
+                if (!task.completed && taskDate < now) {
+                    status = 'overdue';
+                }
+                
+                const taskCard = `
+                    <div class="card task-card ${status} mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title">${task.title}</h5>
+                                    <p class="card-text">${task.description}</p>
+                                    <p class="card-text"><small class="text-muted">
+                                        <i class="fas fa-map-marker-alt"></i> ${task.location || 'Not specified'} | 
+                                        <i class="fas fa-calendar"></i> ${formatDate(task.date)} | 
+                                        <i class="fas fa-clock"></i> ${formatTime(task.time)}
+                                    </small></p>
+                                </div>
+                                <div class="d-flex flex-column align-items-end">
+                                    <span class="badge ${getStatusBadgeClass(status)} status-badge mb-2">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+                                    <div class="btn-group task-actions">
+                                        <button class="btn btn-sm ${task.completed ? 'btn-outline-secondary' : 'btn-outline-success'} complete-btn" data-id="${task.id}">
+                                            <i class="fas ${task.completed ? 'fa-undo' : 'fa-check'}"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${task.id}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${task.id}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.append(taskCard);
+            });
+            
+            // Add event listeners to the new buttons
+            $('.complete-btn').on('click', function() {
+                const taskId = $(this).data('id');
+                toggleTaskCompletion(taskId);
+            });
+            
+            $('.edit-btn').on('click', function() {
+                const taskId = $(this).data('id');
+                openEditTaskModal(taskId);
+            });
+            
+            $('.delete-btn').on('click', function() {
+                const taskId = $(this).data('id');
+                deleteTask(taskId);
+            });
+            
+            updateNotificationCount();
+        }
+
+        function toggleTaskCompletion(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.completed = !task.completed;
+                task.status = task.completed ? 'completed' : 'pending';
+                localStorage.setItem('immunization_tasks', JSON.stringify(tasks));
+                renderTasks();
+                checkOverdueTasks();
+                updateStats();
+                
+                showToast(`Task marked as ${task.completed ? 'completed' : 'pending'}`, 'success');
+            }
+        }
+
+        function deleteTask(taskId) {
+            if (confirm('Are you sure you want to delete this task?')) {
+                tasks = tasks.filter(t => t.id !== taskId);
+                localStorage.setItem('immunization_tasks', JSON.stringify(tasks));
+                renderTasks();
+                checkOverdueTasks();
+                updateStats();
+                
+                showToast('Task deleted successfully', 'info');
+            }
+        }
+
+        function filterTasks() {
+            const statusFilter = $('#status-filter').val();
+            const dateFilter = $('#date-filter').val();
+            const searchText = $('#search').val().toLowerCase();
+            
+            let filteredTasks = tasks;
+            
+            // Apply status filter
+            if (statusFilter !== 'all') {
+                filteredTasks = filteredTasks.filter(task => {
+                    if (statusFilter === 'overdue') {
+                        const taskDate = new Date(`${task.date}T${task.time}`);
+                        return !task.completed && taskDate < new Date();
+                    }
+                    return task.status === statusFilter;
+                });
+            }
+            
+            // Apply date filter
+            if (dateFilter) {
+                filteredTasks = filteredTasks.filter(task => task.date === dateFilter);
+            }
+            
+            // Apply search filter
+            if (searchText) {
+                filteredTasks = filteredTasks.filter(task => 
+                    task.title.toLowerCase().includes(searchText) || 
+                    task.description.toLowerCase().includes(searchText) ||
+                    (task.location && task.location.toLowerCase().includes(searchText))
+                );
+            }
+            
+            // Filter by user if not admin
+            if (!currentUser.isAdmin) {
+                filteredTasks = filteredTasks.filter(task => task.createdBy === currentUser.email);
+            }
+            
+            // Display filtered tasks
+            const container = $('#tasks-container');
+            container.empty();
+            
+            if (filteredTasks.length === 0) {
+                container.html('<div class="alert alert-info">No tasks match your filters.</div>');
+                return;
+            }
+            
+            filteredTasks.forEach(task => {
+                const taskDate = new Date(`${task.date}T${task.time}`);
+                const now = new Date();
+                let status = task.status;
+                
+                if (!task.completed && taskDate < now) {
+                    status = 'overdue';
+                }
+                
+                const taskCard = `
+                    <div class="card task-card ${status} mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title">${task.title}</h5>
+                                    <p class="card-text">${task.description}</p>
+                                    <p class="card-text"><small class="text-muted">
+                                        <i class="fas fa-map-marker-alt"></i> ${task.location || 'Not specified'} | 
+                                        <i class="fas fa-calendar"></i> ${formatDate(task.date)} | 
+                                        <i class="fas fa-clock"></i> ${formatTime(task.time)}
+                                    </small></p>
+                                </div>
+                                <div class="d-flex flex-column align-items-end">
+                                    <span class="badge ${getStatusBadgeClass(status)} status-badge mb-2">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+                                    <div class="btn-group task-actions">
+                                        <button class="btn btn-sm ${task.completed ? 'btn-outline-secondary' : 'btn-outline-success'} complete-btn" data-id="${task.id}">
+                                            <i class="fas ${task.completed ? 'fa-undo' : 'fa-check'}"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${task.id}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${task.id}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.append(taskCard);
+            });
+            
+            // Add event listeners to the new buttons
+            $('.complete-btn').on('click', function() {
+                const taskId = $(this).data('id');
+                toggleTaskCompletion(taskId);
+            });
+            
+            $('.edit-btn').on('click', function() {
+                const taskId = $(this).data('id');
+                openEditTaskModal(taskId);
+            });
+            
+            $('.delete-btn').on('click', function() {
+                const taskId = $(this).data('id');
+                deleteTask(taskId);
+            });
+        }
+
+        function clearFilters() {
+            $('#status-filter').val('all');
+            $('#date-filter').val('');
+            $('#search').val('');
+            renderTasks();
+        }
+
+        function updateStats() {
+            let pendingCount = 0;
+            let completedCount = 0;
+            let overdueCount = 0;
+            
+            // Filter tasks based on current user
+            let userTasks = tasks;
+            if (!currentUser.isAdmin) {
+                userTasks = tasks.filter(task => task.createdBy === currentUser.email);
+            }
+            
+            userTasks.forEach(task => {
+                const taskDate = new Date(`${task.date}T${task.time}`);
+                const now = new Date();
+                
+                if (task.completed) {
+                    completedCount++;
+                } else if (taskDate < now) {
+                    overdueCount++;
+                } else {
+                    pendingCount++;
+                }
+            });
+            
+            $('#pending-count').text(pendingCount);
+            $('#completed-count').text(completedCount);
+            $('#overdue-count').text(overdueCount);
+        }
+
+        function checkOverdueTasks() {
+            const now = new Date();
+            let overdueCount = 0;
+            
+            tasks.forEach(task => {
+                const taskDate = new Date(`${task.date}T${task.time}`);
+                if (!task.completed && taskDate < now) {
+                    overdueCount++;
+                }
+            });
+            
+            $('#notification-count').text(overdueCount);
+            
+            if (overdueCount > 0) {
+                // Show browser notification if permitted
+                if (Notification.permission === 'granted') {
+                    new Notification('Immunization Task Manager', {
+                        body: `You have ${overdueCount} overdue task(s)`,
+                        icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iODAiIGhlaWdodD0iODAiIGZpbGw9IiMzNDk4ZGIiIHJ4PSIxMCIvPjxjaXJjbGUgY3g9IjM1IiBjeT0iNDAiIHI9IjE1IiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjY1IiBjeT0iNDAiIHI9IjE1IiBmaWxsPSJ3aGl0ZSIvPjxwYXRoIGQ9Ik0zNSA3MGMwIDAgMTAtNSA0MCAwIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjQiIGZpbGw9Im5vbmUiLz48L3N2Zz4='
+                    });
+                } else if (Notification.permission !== 'denied') {
+                    Notification.requestPermission();
+                }
+            }
+        }
+
+        function updateNotificationCount() {
+            const now = new Date();
+            let overdueCount = 0;
+            
+            tasks.forEach(task => {
+                const taskDate = new Date(`${task.date}T${task.time}`);
+                if (!task.completed && taskDate < now) {
+                    overdueCount++;
+                }
+            });
+            
+            $('#notification-count').text(overdueCount);
+        }
+
+        function exportData() {
+            // Use jsPDF to export tasks as PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(20);
+            doc.text('Immunization Tasks Report', 14, 15);
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
+            doc.text(`User: ${currentUser.name}`, 14, 29);
+            
+            // Prepare data for table
+            const tableData = [];
+            let userTasks = tasks;
+            
+            if (!currentUser.isAdmin) {
+                userTasks = tasks.filter(task => task.createdBy === currentUser.email);
+            }
+            
+            userTasks.forEach(task => {
+                const taskDate = new Date(`${task.date}T${task.time}`);
+                const now = new Date();
+                let status = task.status;
+                
+                if (!task.completed && taskDate < now) {
+                    status = 'overdue';
+                }
+                
+                tableData.push([
+                    task.title,
+                    formatDate(task.date),
+                    formatTime(task.time),
+                    task.location || 'N/A',
+                    status.toUpperCase()
+                ]);
+            });
+            
+            // Add table
+            doc.autoTable({
+                head: [['Title', 'Date', 'Time', 'Location', 'Status']],
+                body: tableData,
+                startY: 40,
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [52, 152, 219] }
+            });
+            
+            // Save the PDF
+            doc.save('immunization_tasks_report.pdf');
+            showToast('Tasks exported as PDF', 'success');
+        }
+
+        // Utility Functions
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        function formatTime(timeString) {
+            const [hours, minutes] = timeString.split(':');
+            const hour = parseInt(hours);
+            return `${hour % 12 || 12}:${minutes} ${hour >= 12 ? 'PM' : 'AM'}`;
+        }
+
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'completed': return 'bg-success';
+                case 'pending': return 'bg-warning';
+                case 'overdue': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+    </script>
+</body>
+</html>
